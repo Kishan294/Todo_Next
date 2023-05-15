@@ -1,0 +1,105 @@
+"use client"
+
+import { useEffect, useState } from "react"
+import Image from "next/image"
+import Link from "next/link"
+import { getProviders, signIn, signOut, useSession } from "next-auth/react"
+
+import { siteConfig } from "@/config/site"
+import { Button, buttonVariants } from "@/components/ui/button"
+import { Icons } from "@/components/icons"
+import { MainNav } from "@/components/main-nav"
+import { ThemeToggle } from "@/components/theme-toggle"
+
+export function SiteHeader() {
+  const { data: session } = useSession()
+
+  const [providers, setProviders] = useState(null)
+  // const [toggleDropdown, setToggleDropdown] = useState(false)
+
+  useEffect(() => {
+    ;(async () => {
+      const res: any = await getProviders()
+      setProviders(res)
+    })()
+  }, [])
+  return (
+    <header className="sticky top-0 z-40 w-full border-b bg-background">
+      <div className="container flex h-16 items-center space-x-4 sm:justify-between sm:space-x-0">
+        <MainNav items={siteConfig.mainNav} />
+        <div className="flex flex-1 items-center justify-end space-x-4">
+          <nav className="flex items-center space-x-1">
+            <Link
+              href={siteConfig.links.github}
+              target="_blank"
+              rel="noreferrer"
+            >
+              <div
+                className={buttonVariants({
+                  size: "sm",
+                  variant: "ghost",
+                })}
+              >
+                <Icons.gitHub className="h-5 w-5" />
+                <span className="sr-only">GitHub</span>
+              </div>
+            </Link>
+            <Link
+              href={siteConfig.links.twitter}
+              target="_blank"
+              rel="noreferrer"
+            >
+              <div
+                className={buttonVariants({
+                  size: "sm",
+                  variant: "ghost",
+                })}
+              >
+                <Icons.twitter className="h-5 w-5 fill-current" />
+                <span className="sr-only">Twitter</span>
+              </div>
+            </Link>
+            <ThemeToggle />
+            {session?.user ? (
+              <div className="flex gap-3 md:gap-5">
+                <Button
+                  type="button"
+                  onClick={() => signOut()}
+                  className="outline_btn"
+                >
+                  Sign Out
+                </Button>
+
+                <Link href="/profile">
+                  <Image
+                    src={session?.user.image!}
+                    width={37}
+                    height={37}
+                    className="rounded-full"
+                    alt="profile"
+                  />
+                </Link>
+              </div>
+            ) : (
+              <>
+                {providers &&
+                  Object.values(providers).map((provider: any) => (
+                    <Button
+                      type="button"
+                      key={provider.name}
+                      onClick={() => {
+                        signIn(provider.id)
+                      }}
+                      className="black_btn"
+                    >
+                      Sign in
+                    </Button>
+                  ))}
+              </>
+            )}
+          </nav>
+        </div>
+      </div>
+    </header>
+  )
+}
